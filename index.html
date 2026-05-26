@@ -580,6 +580,7 @@ function goContact(){
 }
 
 async function submitContact(){
+  alert('submit funcionando');
   const nombre = document.getElementById('inp-nombre').value.trim();
   const telefono = document.getElementById('inp-telefono').value.trim();
   const email = document.getElementById('inp-email').value.trim();
@@ -617,19 +618,27 @@ async function saveToSupabase(contactData){
     else if(total>=6) resultado='posiblemente_candidato';
     else resultado='evaluacion_requerida';
 
-    const { error } = await _sb.from('leads_glp1').insert({
-      nombre: contactData.nombre || null,
-      telefono: contactData.telefono || null,
-      email: contactData.email || null,
-      resultado: resultado,
-      score_total: total,
-      imc: imcVal ? parseFloat(imcVal) : null,
-      imc_categoria: imcKey || null,
-      peso_kg: pesoKg ? parseFloat(pesoKg) : null,
-      factores_clave: allK.join(',') || null,
-      created_at: new Date().toISOString()
-    });
-    if(error) console.error('Supabase error:', error);
+    const { data, error } = await _sb
+  .from('leads_glp1')
+  .insert([{
+    nombre: contactData.nombre || null,
+    telefono: contactData.telefono || null,
+    email: contactData.email || null,
+    resultado: resultado,
+    score_total: total,
+    imc: imcVal ? parseFloat(imcVal) : null,
+    imc_categoria: imcKey || null,
+    peso_kg: pesoKg ? parseFloat(pesoKg) : null,
+    factores_clave: allK.join(',') || null,
+    created_at: new Date().toISOString()
+  }]);
+
+console.log('DATA:', data);
+console.log('ERROR:', error);
+
+if(error){
+  alert(JSON.stringify(error));
+}
   } catch(e) {
     console.error('Error guardando datos:', e);
   }

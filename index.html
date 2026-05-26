@@ -638,10 +638,9 @@ async function saveToSupabase(contactData){
 
     console.log('ENVIANDO:', payload);
 
-    const { data, error } = await _sb
+    const { error } = await _sb
       .from('leads_glp1')
-      .insert([payload])
-      .select();
+      .insert([payload]);
 
     console.log('DATA:', data);
     console.log('ERROR:', error);

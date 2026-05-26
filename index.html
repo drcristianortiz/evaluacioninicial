@@ -642,9 +642,6 @@ async function saveToSupabase(contactData){
       .from('leads_glp1')
       .insert([payload]);
 
-    console.log('DATA:', data);
-    console.log('ERROR:', error);
-
     if(error){
       alert('ERROR SUPABASE');
       console.error(error);

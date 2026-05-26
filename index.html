@@ -598,49 +598,64 @@ function skipContact(){
 }
 
 async function saveToSupabase(contactData){
+
   try {
-    const allK = answers.flatMap(a=>a?a.keys:[]);
+
+    const allK = answers.flatMap(a => a ? a.keys : []);
     const qW = answers.reduce((s,a)=>s+(a?a.w:0),0);
-    let imcW=0;
-    if(imcKey==='imc_ob2')imcW=3; else if(imcKey==='imc_ob1')imcW=2;
-    else if(imcKey==='imc_sobre')imcW=1; else if(imcKey==='imc_normal')imcW=-1;
-    else if(imcKey==='imc_bajo')imcW=-2;
-    const total=qW+imcW;
 
-    const hardC=['ca_tir','pancreatitis','falla_org','embarazo'].some(k=>allK.includes(k));
-    const noC=allK.includes('comp_no');
-    const imcBajo=(imcKey==='imc_normal'||imcKey==='imc_bajo')&&!['dm2','hta','dislip','sop','cardio','higado'].some(k=>allK.includes(k));
+    let imcW = 0;
 
-    let resultado='evaluacion_requerida';
-    if(hardC) resultado='evaluacion_especializada';
-    else if(imcBajo) resultado='evaluacion_personalizada';
-    else if(total>=13&&!noC) resultado='muy_probablemente_candidato';
-    else if(total>=6) resultado='posiblemente_candidato';
-    else resultado='evaluacion_requerida';
+    if(imcKey==='imc_ob2') imcW=3;
+    else if(imcKey==='imc_ob1') imcW=2;
+    else if(imcKey==='imc_sobre') imcW=1;
+    else if(imcKey==='imc_normal') imcW=-1;
+    else if(imcKey==='imc_bajo') imcW=-2;
+
+    const total = qW + imcW;
+
+    let resultado = 'evaluacion_requerida';
+
+    if(total >= 13){
+      resultado = 'muy_probablemente_candidato';
+    }
+    else if(total >= 6){
+      resultado = 'posiblemente_candidato';
+    }
+
+    const payload = {
+      nombre: contactData.nombre || null,
+      telefono: contactData.telefono || null,
+      email: contactData.email || null,
+      resultado: resultado,
+      score_total: total,
+      imc: imcVal || null,
+      imc_categoria: imcKey || null,
+      peso_kg: pesoKg || null,
+      factores_clave: allK.join(','),
+      created_at: new Date().toISOString()
+    };
+
+    console.log('ENVIANDO:', payload);
 
     const { data, error } = await _sb
-  .from('leads_glp1')
-  .insert([{
-    nombre: contactData.nombre || null,
-    telefono: contactData.telefono || null,
-    email: contactData.email || null,
-    resultado: resultado,
-    score_total: total,
-    imc: imcVal ? parseFloat(imcVal) : null,
-    imc_categoria: imcKey || null,
-    peso_kg: pesoKg ? parseFloat(pesoKg) : null,
-    factores_clave: allK.join(',') || null,
-    created_at: new Date().toISOString()
-  }]);
+      .from('leads_glp1')
+      .insert([payload])
+      .select();
 
-console.log('DATA:', data);
-console.log('ERROR:', error);
+    console.log('DATA:', data);
+    console.log('ERROR:', error);
 
-if(error){
-  alert(JSON.stringify(error));
-}
-  } catch(e) {
-    console.error('Error guardando datos:', e);
+    if(error){
+      alert('ERROR SUPABASE');
+      console.error(error);
+    } else {
+      alert('Lead guardado correctamente');
+    }
+
+  } catch(e){
+    console.error(e);
+    alert('Error general');
   }
 }
 
